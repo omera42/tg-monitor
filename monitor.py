@@ -20,6 +20,8 @@ AREAS = {
 
 ALERT_WORDS = ["אזעקה","אזעקות","טיל","טילים","נפילה","נפל","פיצוץ","התקפה","חירום","כיפת ברזל","יירוט"]
 
+OREF_MAP = "https://www.oref.org.il/heb/districts"
+
 user_client = TelegramClient(StringSession(SESSION), API_ID, API_HASH)
 bot_client  = TelegramClient(StringSession(), API_ID, API_HASH)
 
@@ -45,8 +47,9 @@ async def main():
         now = datetime.now().strftime('%d/%m/%Y %H:%M')
         areas_str = ", ".join(found_areas)
         map_link = f"\n🗺️ [פתח במפה]({AREAS[found_areas[0]]})"
+        oref_link = f"\n🛡️ [מפת פיקוד העורף]({OREF_MAP})"
         alerts_str = f"\n⚠️ {', '.join(found_alerts)}" if found_alerts else ""
-        msg = f"🚨 *התראה באזורך!* — {now}\n📍 {source}\n📌 אזור: {areas_str}{alerts_str}{map_link}\n\n{event.message.text[:500]}"
+        msg = f"🚨 *התראה באזורך!* — {now}\n📍 {source}\n📌 אזור: {areas_str}{alerts_str}{map_link}{oref_link}\n\n{event.message.text[:500]}"
         await bot_client.send_message(CHAT_ID, msg, parse_mode='md', link_preview=False)
 
     await user_client.run_until_disconnected()
