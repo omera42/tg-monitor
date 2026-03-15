@@ -159,7 +159,7 @@ async def main():
     await user_client.run_until_disconnected()
 
 asyncio.run(main())
-```
+
 
 ועדכן גם `requirements.txt` ב-GitHub:
 ```
