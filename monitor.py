@@ -56,10 +56,16 @@ ALLOWED_SOURCES = [
     "ניצן שפירא בטלגרם",
     "ניצן שפירא",
     "חדשות N12",
-   "צופר",
+    "N12",
+    "צופר",
     "צבע אדום",
     "צופר - צבע אדום",
-    "N12",
+]
+
+MAP_SOURCES = [
+    "צופר",
+    "צבע אדום",
+    "צופר - צבע אדום",
 ]
 
 OREF_API  = "https://www.oref.org.il/WarningMessages/alert/alerts.json"
@@ -83,6 +89,10 @@ def check_message(text):
 def is_allowed_source(chat):
     title = getattr(chat, 'title', '') or ''
     return any(s.lower() in title.lower() for s in ALLOWED_SOURCES)
+
+def is_map_source(chat):
+    title = getattr(chat, 'title', '') or ''
+    return any(s.lower() in title.lower() for s in MAP_SOURCES)
 
 def should_send(area):
     now = datetime.now().timestamp()
@@ -160,22 +170,46 @@ async def run():
                 "✅ *מעקב ביטחוני פעיל!*\n"
                 "📡 פיקוד העורף — בזמן אמת כל 3 שניות\n"
                 "📰 ערוצי חדשות — התראות מוקדמות\n"
+                "🗺️ כולל מפות מצופר\n"
                 "🎯 עוקב רק אחרי האזורים שלך",
                 parse_mode='md'
             )
 
             @user_client.on(events.NewMessage)
             async def handler(event):
-                if not event.message.text:
+                if not event.message.text and not event.message.photo:
                     return
                 if event.message.date.timestamp() < start_time:
                     return
                 chat = await event.get_chat()
                 if not is_allowed_source(chat):
                     return
-                text = event.message.text
-                found_areas, found_alerts, found_early = check_message(text)
+
                 source = getattr(chat, 'title', None) or 'לא ידוע'
+                text = event.message.text or event.message.message or ""
+
+                # מקור מפות — שלח תמונה ישירות אם יש אזור בכיתוב
+                if is_map_source(chat) and event.message.photo:
+                    found_areas, _, _ = check_message(text)
+                    if not found_areas and not any(a in text for a in AREAS):
+                        # שלח את המפה בכל מקרה מצופר
+                        msg = "🗺️ *מפת אזעקות — " + now_il() + "*\n📡 " + source
+                        await bot_client.send_message(CHAT_ID, msg, parse_mode='md')
+                        await user_client.forward_messages(CHAT_ID, event.message)
+                        return
+                    found_areas, _, _ = check_message(text)
+                    if found_areas:
+                        new_areas = [a for a in found_areas if should_send(a)]
+                        if new_areas:
+                            msg = "🗺️ *מפת אזעקות באזורך — " + now_il() + "*\n📡 " + source + "\n📌 " + ", ".join(new_areas)
+                            await bot_client.send_message(CHAT_ID, msg, parse_mode='md')
+                            await user_client.forward_messages(CHAT_ID, event.message)
+                        return
+
+                if not text:
+                    return
+
+                found_areas, found_alerts, found_early = check_message(text)
 
                 if found_early:
                     if is_duplicate(text):
