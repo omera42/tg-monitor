@@ -15,13 +15,14 @@ IL_TZ = pytz.timezone('Asia/Jerusalem')
 AREAS = {
     "ראש העין": "https://www.google.com/maps/search/ראש+העין+ישראל",
     "תל אביב דרום": "https://www.google.com/maps/search/תל+אביב+דרום+ישראל",
+    "תל אביב - דרום": "https://www.google.com/maps/search/תל+אביב+דרום+ישראל",
     "שחרות": "https://www.google.com/maps/search/שחרות+ישראל",
     "אורים": "https://www.google.com/maps/search/אורים+ישראל",
     "באר שבע צפון": "https://www.google.com/maps/search/באר+שבע+ישראל",
     "באר שבע - צפון": "https://www.google.com/maps/search/באר+שבע+ישראל",
-    "באר שבע - מזרח": "https://www.google.com/maps/search/באר+שבע+ישראל",
-    "באר שבע": "https://www.google.com/maps/search/באר+שבע+ישראל",
     "פלמחים": "https://www.google.com/maps/search/פלמחים+ישראל",
+    "ראש העין - מזרח": "https://www.google.com/maps/search/ראש+העין+ישראל",
+    "ראש העין - מערב": "https://www.google.com/maps/search/ראש+העין+ישראל",
 }
 
 ALERT_WORDS = ["אזעקה","אזעקות","טיל","טילים","נפילה","נפל","פיצוץ","התקפה","חירום","כיפת ברזל","יירוט","ירי","נפגע","נפגעים"]
