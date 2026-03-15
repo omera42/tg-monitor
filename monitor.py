@@ -38,17 +38,3 @@ async def main():
     await user_client.run_until_disconnected()
 
 asyncio.run(main())
-```
-
----
-
-**קובץ 2 — `requirements.txt`**
-```
-telethon==1.34.0
-```
-
----
-
-**קובץ 3 — `Procfile`**
-```
-worker: python monitor.py
