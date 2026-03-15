@@ -18,6 +18,9 @@ AREAS = {
     "שחרות": "https://www.google.com/maps/search/שחרות+ישראל",
     "אורים": "https://www.google.com/maps/search/אורים+ישראל",
     "באר שבע צפון": "https://www.google.com/maps/search/באר+שבע+ישראל",
+    "באר שבע - צפון": "https://www.google.com/maps/search/באר+שבע+ישראל",
+    "באר שבע - מזרח": "https://www.google.com/maps/search/באר+שבע+ישראל",
+    "באר שבע": "https://www.google.com/maps/search/באר+שבע+ישראל",
     "פלמחים": "https://www.google.com/maps/search/פלמחים+ישראל",
 }
 
