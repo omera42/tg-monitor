@@ -89,7 +89,7 @@ def should_send(area):
     return False
 
 def is_duplicate(text):
-    key = text[:50].strip()
+    key = text[:80].strip()
     if key in seen_messages:
         return True
     seen_messages.add(key)
@@ -179,7 +179,7 @@ async def run():
                         return
                     early_str = ", ".join(found_early)
                     oref_link = "\n🚨 [מפת אזעקות בלייב](" + OREF_LIVE + ")"
-                    msg = "⚡ *התראה מוקדמת!* — " + now_il() + "\n📍 " + source + "\n🔔 " + early_str + oref_link + "\n\n" + text[:500]
+                    msg = "⚡ *התראה מוקדמת!* — " + now_il() + "\n📍 " + source + "\n🔔 " + early_str + oref_link + "\n\n" + text[:1000]
                     await bot_client.send_message(CHAT_ID, msg, parse_mode='md', link_preview=False)
                     return
 
@@ -192,7 +192,7 @@ async def run():
                 map_link   = "\n🗺️ [פתח במפה](" + AREAS[new_areas[0]] + ")"
                 oref_link  = "\n🚨 [מפת אזעקות בלייב](" + OREF_LIVE + ")"
                 alerts_str = "\n⚠️ " + ", ".join(found_alerts) if found_alerts else ""
-                msg = "🚨 *התראה באזורך!* — " + now_il() + "\n📍 " + source + "\n📌 אזור: " + areas_str + alerts_str + map_link + oref_link + "\n\n" + text[:500]
+                msg = "🚨 *התראה באזורך!* — " + now_il() + "\n📍 " + source + "\n📌 אזור: " + areas_str + alerts_str + map_link + oref_link + "\n\n" + text[:1000]
                 await bot_client.send_message(CHAT_ID, msg, parse_mode='md', link_preview=False)
 
             asyncio.create_task(oref_loop(bot_client))
