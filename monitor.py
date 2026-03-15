@@ -21,12 +21,15 @@ AREAS = {
     "פלמחים": "https://www.google.com/maps/search/פלמחים+ישראל",
 }
 
-ALERT_WORDS = ["אזעקה","אזעקות","טיל","טילים","נפילה","נפל","פיצוץ","התקפה","חירום","כיפת ברזל","יירוט"]
+ALERT_WORDS = ["אזעקה","אזעקות","טיל","טילים","נפילה","נפל","פיצוץ","התקפה","חירום","כיפת ברזל","יירוט","ירי","נפגע","נפגעים"]
 EARLY_WARNINGS = ["התראה מוקדמת","שיגור מאיראן","טילים בדרך","שיגור בליסטי"]
 
 ALLOWED_SOURCES = [
+    "חדשות מהשנייה בטלגרם",
     "חדשות מהשניה",
+    "דיווחים און ליין",
     "דיווחים אונליין",
+    "ניצן שפירא בטלגרם",
     "ניצן שפירא",
     "חדשות N12",
     "N12",
@@ -35,11 +38,11 @@ ALLOWED_SOURCES = [
 OREF_API  = "https://www.oref.org.il/WarningMessages/alert/alerts.json"
 OREF_LIVE = "https://www.oref.org.il/heb/alerts-history"
 
-last_alert   = {}
+last_alert    = {}
 seen_messages = set()
-seen_oref    = set()
-COOLDOWN     = 600
-start_time   = None
+seen_oref     = set()
+COOLDOWN      = 600
+start_time    = None
 
 user_client = TelegramClient(StringSession(SESSION), API_ID, API_HASH)
 bot_client  = TelegramClient(StringSession(), API_ID, API_HASH)
@@ -96,7 +99,7 @@ async def check_oref():
                         seen_oref.clear()
                     found = [a for a in AREAS if a in alert]
                     if found:
-                        area     = found[0]
+                        area      = found[0]
                         map_link  = "\n🗺️ [פתח במפה](" + AREAS[area] + ")"
                         oref_link = "\n🚨 [מפת אזעקות בלייב](" + OREF_LIVE + ")"
                         msg = "🚨 *אזעקה בזמן אמת!* — " + now_il() + "\n📡 פיקוד העורף\n📌 אזור: " + alert + map_link + oref_link
@@ -128,7 +131,6 @@ async def main():
     async def handler(event):
         if not event.message.text:
             return
-        # התעלם מהודעות ישנות
         if event.message.date.timestamp() < start_time:
             return
         chat = await event.get_chat()
@@ -152,9 +154,9 @@ async def main():
         new_areas = [a for a in found_areas if should_send(a)]
         if not new_areas:
             return
-        areas_str = ", ".join(new_areas)
-        map_link  = "\n🗺️ [פתח במפה](" + AREAS[new_areas[0]] + ")"
-        oref_link = "\n🚨 [מפת אזעקות בלייב](" + OREF_LIVE + ")"
+        areas_str  = ", ".join(new_areas)
+        map_link   = "\n🗺️ [פתח במפה](" + AREAS[new_areas[0]] + ")"
+        oref_link  = "\n🚨 [מפת אזעקות בלייב](" + OREF_LIVE + ")"
         alerts_str = "\n⚠️ " + ", ".join(found_alerts) if found_alerts else ""
         msg = "🚨 *התראה באזורך!* — " + now_il() + "\n📍 " + source + "\n📌 אזור: " + areas_str + alerts_str + map_link + oref_link + "\n\n" + text[:500]
         await bot_client.send_message(CHAT_ID, msg, parse_mode='md', link_preview=False)
