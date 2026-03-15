@@ -68,9 +68,6 @@ seen_oref     = set()
 COOLDOWN      = 600
 start_time    = None
 
-user_client = TelegramClient(StringSession(SESSION), API_ID, API_HASH)
-bot_client  = TelegramClient(StringSession(), API_ID, API_HASH)
-
 def now_il():
     return datetime.now(IL_TZ).strftime('%d/%m/%Y %H:%M')
 
@@ -100,7 +97,7 @@ def is_duplicate(text):
         seen_messages.clear()
     return False
 
-async def check_oref():
+async def check_oref(bot_client):
     try:
         headers = {
             'Referer': 'https://www.oref.org.il/',
@@ -131,61 +128,81 @@ async def check_oref():
     except Exception:
         pass
 
-async def oref_loop():
+async def oref_loop(bot_client):
     while True:
-        await check_oref()
+        await check_oref(bot_client)
         await asyncio.sleep(3)
 
-async def main():
+async def run():
     global start_time
-    await user_client.start()
-    await bot_client.start(bot_token=BOT_TOKEN)
-    start_time = datetime.now().timestamp()
+    retry = 0
+    while True:
+        try:
+            user_client = TelegramClient(StringSession(SESSION), API_ID, API_HASH)
+            bot_client  = TelegramClient(StringSession(), API_ID, API_HASH)
 
-    await bot_client.send_message(
-        CHAT_ID,
-        "✅ *מעקב ביטחוני פעיל!*\n"
-        "📡 פיקוד העורף — בזמן אמת כל 3 שניות\n"
-        "📰 ערוצי חדשות — התראות מוקדמות\n"
-        "🎯 עוקב רק אחרי האזורים שלך",
-        parse_mode='md'
-    )
+            await user_client.connect()
+            await bot_client.connect()
 
-    @user_client.on(events.NewMessage)
-    async def handler(event):
-        if not event.message.text:
-            return
-        if event.message.date.timestamp() < start_time:
-            return
-        chat = await event.get_chat()
-        if not is_allowed_source(chat):
-            return
-        text = event.message.text
-        found_areas, found_alerts, found_early = check_message(text)
-        source = getattr(chat, 'title', None) or 'לא ידוע'
+            if not await user_client.is_user_authorized():
+                print("User not authorized!")
+                break
 
-        if found_early:
-            if is_duplicate(text):
-                return
-            early_str = ", ".join(found_early)
-            oref_link = "\n🚨 [מפת אזעקות בלייב](" + OREF_LIVE + ")"
-            msg = "⚡ *התראה מוקדמת!* — " + now_il() + "\n📍 " + source + "\n🔔 " + early_str + oref_link + "\n\n" + text[:500]
-            await bot_client.send_message(CHAT_ID, msg, parse_mode='md', link_preview=False)
-            return
+            await bot_client.sign_in(bot_token=BOT_TOKEN)
+            start_time = datetime.now().timestamp()
+            retry = 0
 
-        if not found_areas:
-            return
-        new_areas = [a for a in found_areas if should_send(a)]
-        if not new_areas:
-            return
-        areas_str  = ", ".join(new_areas)
-        map_link   = "\n🗺️ [פתח במפה](" + AREAS[new_areas[0]] + ")"
-        oref_link  = "\n🚨 [מפת אזעקות בלייב](" + OREF_LIVE + ")"
-        alerts_str = "\n⚠️ " + ", ".join(found_alerts) if found_alerts else ""
-        msg = "🚨 *התראה באזורך!* — " + now_il() + "\n📍 " + source + "\n📌 אזור: " + areas_str + alerts_str + map_link + oref_link + "\n\n" + text[:500]
-        await bot_client.send_message(CHAT_ID, msg, parse_mode='md', link_preview=False)
+            await bot_client.send_message(
+                CHAT_ID,
+                "✅ *מעקב ביטחוני פעיל!*\n"
+                "📡 פיקוד העורף — בזמן אמת כל 3 שניות\n"
+                "📰 ערוצי חדשות — התראות מוקדמות\n"
+                "🎯 עוקב רק אחרי האזורים שלך",
+                parse_mode='md'
+            )
 
-    asyncio.create_task(oref_loop())
-    await user_client.run_until_disconnected()
+            @user_client.on(events.NewMessage)
+            async def handler(event):
+                if not event.message.text:
+                    return
+                if event.message.date.timestamp() < start_time:
+                    return
+                chat = await event.get_chat()
+                if not is_allowed_source(chat):
+                    return
+                text = event.message.text
+                found_areas, found_alerts, found_early = check_message(text)
+                source = getattr(chat, 'title', None) or 'לא ידוע'
 
-asyncio.run(main())
+                if found_early:
+                    if is_duplicate(text):
+                        return
+                    early_str = ", ".join(found_early)
+                    oref_link = "\n🚨 [מפת אזעקות בלייב](" + OREF_LIVE + ")"
+                    msg = "⚡ *התראה מוקדמת!* — " + now_il() + "\n📍 " + source + "\n🔔 " + early_str + oref_link + "\n\n" + text[:500]
+                    await bot_client.send_message(CHAT_ID, msg, parse_mode='md', link_preview=False)
+                    return
+
+                if not found_areas:
+                    return
+                new_areas = [a for a in found_areas if should_send(a)]
+                if not new_areas:
+                    return
+                areas_str  = ", ".join(new_areas)
+                map_link   = "\n🗺️ [פתח במפה](" + AREAS[new_areas[0]] + ")"
+                oref_link  = "\n🚨 [מפת אזעקות בלייב](" + OREF_LIVE + ")"
+                alerts_str = "\n⚠️ " + ", ".join(found_alerts) if found_alerts else ""
+                msg = "🚨 *התראה באזורך!* — " + now_il() + "\n📍 " + source + "\n📌 אזור: " + areas_str + alerts_str + map_link + oref_link + "\n\n" + text[:500]
+                await bot_client.send_message(CHAT_ID, msg, parse_mode='md', link_preview=False)
+
+            asyncio.create_task(oref_loop(bot_client))
+            await user_client.run_until_disconnected()
+
+        except Exception as e:
+            print("Error: " + str(e))
+            retry += 1
+            wait = min(30 * retry, 300)
+            print("Reconnecting in " + str(wait) + " seconds...")
+            await asyncio.sleep(wait)
+
+asyncio.run(run())
